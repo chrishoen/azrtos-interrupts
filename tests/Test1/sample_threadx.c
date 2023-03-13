@@ -5,6 +5,9 @@
 #include   "tx_api.h"
 #include   <stdio.h>
 
+/* choen added this. */
+extern BOOL sample_interrupt_start();
+
 #define     DEMO_STACK_SIZE         1024
 #define     DEMO_BYTE_POOL_SIZE     9120
 #define     DEMO_BLOCK_POOL_SIZE    100
@@ -169,6 +172,9 @@ CHAR    *pointer = TX_NULL;
 
     /* Release the block back to the pool.  */
     tx_block_release(pointer);
+
+    /* choen added this. */
+    sample_interrupt_start();
 }
 
 
