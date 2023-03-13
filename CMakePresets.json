@@ -1,0 +1,50 @@
+{
+   "version": 3,
+   "configurePresets": [
+      {
+         "name": "base",
+         "description": "Windows host with the Visual Studio development environment.",
+         "hidden": true,
+         "generator": "Ninja",
+         "binaryDir": "${sourceDir}/out/build/${presetName}",
+         "installDir": "${sourceDir}/out/install/${presetName}",
+         "condition": {
+            "type": "equals",
+            "lhs": "${hostSystemName}",
+            "rhs": "Windows"
+         }
+      },
+      {
+         "name": "windows-debug",
+         "displayName": "windows-debug",
+         "description": "Target Windows, (Debug)",
+         "inherits": "base",
+         "architecture": {
+            "value": "x86",
+            "strategy": "external"
+         },
+         "cacheVariables": {
+            "CMAKE_C_COMPILER": "cl.exe",
+            "CMAKE_CXX_COMPILER": "cl.exe",
+            "CMAKE_BUILD_TYPE": "Debug",
+            "THREADX_ARCH": {
+               "type": "STRING",
+               "value": "win32"
+            },
+            "THREADX_TOOLCHAIN": {
+               "type": "STRING",
+               "value": "vs_2019"
+            }
+         }
+      },
+      {
+         "name": "windows-release",
+         "displayName": "windows-release",
+         "description": "Target Windows, (Release)",
+         "inherits": "windows-debug",
+         "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Release"
+         }
+      }
+   ]
+}
