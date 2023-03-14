@@ -175,7 +175,7 @@ CHAR    *pointer = TX_NULL;
     tx_block_release(pointer);
 
     /* choen added this. */
-    //sample_interrupt_start();
+    sample_interrupt_start();
 }
 
 
