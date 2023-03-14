@@ -62,7 +62,7 @@ void    thread_6_and_7_entry(ULONG thread_input);
 int main()
 {
 
-    /* Do this first. */
+    /* choen added this. */
     timeBeginPeriod(1);
 
     /* Enter the ThreadX kernel.  */
