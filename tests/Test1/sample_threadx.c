@@ -7,7 +7,7 @@
 
 /* choen added this. */
 extern BOOL sample_interrupt_start();
-#define TICK_SCALE 2
+#define TICK_SCALE 4
 
 #define     DEMO_STACK_SIZE         1024
 #define     DEMO_BYTE_POOL_SIZE     9120

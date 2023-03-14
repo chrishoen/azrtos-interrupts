@@ -54,7 +54,7 @@ DWORD WINAPI                    _tx_win32_timer_interrupt(LPVOID p);
 
 /* Start a periodic windows timer that triggers the simulated
    timer interrupt at 100 hz. */
-VOID                             _tx_win32_start_periodic_timer();
+VOID                            _tx_win32_start_periodic_timer();
 
 
 #ifdef TX_WIN32_DEBUG_ENABLE
@@ -268,10 +268,6 @@ VOID   _tx_initialize_low_level(VOID)
        threads.  */
     SetThreadPriority(_tx_win32_timer_handle, THREAD_PRIORITY_BELOW_NORMAL);
 
-    /* Start a periodic windows timer that triggers the simulated
-       timer interrupt at 100 hz. */
-    _tx_win32_start_periodic_timer();
-
     /* Done, return to caller.  */
 }
 
@@ -282,6 +278,9 @@ VOID   _tx_initialize_low_level(VOID)
 
 void    _tx_initialize_start_interrupts(void)
 {
+    /* Start a periodic windows timer that triggers the simulated
+       timer interrupt at 100 hz. */
+    _tx_win32_start_periodic_timer();
 
     /* Kick the timer thread off to generate the ThreadX periodic interrupt
        source.  */
