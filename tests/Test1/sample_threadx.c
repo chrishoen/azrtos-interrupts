@@ -2,8 +2,9 @@
    threads of different priorities, using a message queue, semaphore, mutex, event flags group, 
    byte pool, and block pool.  */
 
-#include   "tx_api.h"
 #include   <stdio.h>
+#include   "ProgramTime.h"
+#include   "tx_api.h"
 
 /* choen added this. */
 extern BOOL sample_interrupt_start();
@@ -35,6 +36,9 @@ void    thread_0_entry(ULONG thread_input);
 
 int main()
 {
+    /* Do this first. */
+    initializeProgramTime();
+    timeBeginPeriod(1);
 
     /* Enter the ThreadX kernel.  */
     tx_kernel_enter();
@@ -47,7 +51,6 @@ void    tx_application_define(void *first_unused_memory)
 {
 
 CHAR    *pointer = TX_NULL;
-
 
     /* Create a byte memory pool from which to allocate the thread stacks.  */
     tx_byte_pool_create(&byte_pool_0, "byte pool 0", first_unused_memory, DEMO_BYTE_POOL_SIZE);
@@ -70,14 +73,20 @@ CHAR    *pointer = TX_NULL;
 /* Define the test threads.  */
 
 void    thread_0_entry(ULONG thread_input)
-{
+{   
+    double tLastTime = getProgramTime();
     /* This thread simply sits in while-forever-sleep loop.  */
     while(1)
     {
-        /* Print results.  */
-        printf("thread_0 ************* %d\n", thread_0_counter++);
+        double tCurrentTime = getProgramTime();
+        double tDeltaTime = tCurrentTime - tLastTime;
+        tLastTime = tCurrentTime;
 
-        /* Sleep for 10 ticks.  */
+        /* Print results.  */
+        printf("thread_0 ************* %d %.3f\n",
+            thread_0_counter++, tDeltaTime);
+
+        /* Sleep for 100 ticks.  */
         tx_thread_sleep(100);
     }
 }
