@@ -217,7 +217,7 @@ VOID   _tx_initialize_low_level(VOID)
 #ifndef TX_WIN32_BYPASS_AFFINITY_SETUP
 
     /* Limit this ThreadX simulation on Win32 to a single core.  */
-    if (SetProcessAffinityMask( GetCurrentProcess(), 1 ) == -1)
+    if (SetProcessAffinityMask( GetCurrentProcess(), 1 ) == 0)
     {
     
         /* Error restricting the process to one core.  */
@@ -308,7 +308,9 @@ DWORD WINAPI _tx_win32_timer_interrupt(LPVOID p)
         /* Wait for the periodic timer event. This is triggered by the
            windows timer shown below at 100 hz. */
         if (WaitForSingleObject(_tx_win32_periodic_timer, INFINITE) != WAIT_OBJECT_0)
+        {
             printf("_tx_win32_timer_interrupt WaitForSingleObject failed (%d)\n", GetLastError());
+        }
 
         /* Call ThreadX context save for interrupt preparation.  */
         _tx_thread_context_save();

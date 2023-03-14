@@ -7,7 +7,7 @@
 
 /* choen added this. */
 extern BOOL sample_interrupt_start();
-#define TICK_SCALE 3
+#define TICK_SCALE 2
 
 #define     DEMO_STACK_SIZE         1024
 #define     DEMO_BYTE_POOL_SIZE     9120
@@ -175,7 +175,7 @@ CHAR    *pointer = TX_NULL;
     tx_block_release(pointer);
 
     /* choen added this. */
-    sample_interrupt_start();
+    //sample_interrupt_start();
 }
 
 
