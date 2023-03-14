@@ -15,5 +15,5 @@ my_print_cmake_vars()
 
 
 add_subdirectory ("threadx")
-add_subdirectory ("tests/Test1")
+add_subdirectory ("tests/Test2")
 return()

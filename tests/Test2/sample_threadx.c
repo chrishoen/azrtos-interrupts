@@ -7,7 +7,7 @@
 
 /* choen added this. */
 extern BOOL sample_interrupt_start();
-#define TICK_SCALE 4
+#define TICK_SCALE 10
 
 #define     DEMO_STACK_SIZE         1024
 #define     DEMO_BYTE_POOL_SIZE     9120
@@ -61,6 +61,9 @@ void    thread_6_and_7_entry(ULONG thread_input);
 
 int main()
 {
+
+    /* Do this first. */
+    timeBeginPeriod(1);
 
     /* Enter the ThreadX kernel.  */
     tx_kernel_enter();
