@@ -30,8 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-
-#pragma warning(disable:6387)
+#pragma comment (lib, "Winmm.lib")
 
 /* Define various Win32 objects used by the ThreadX port.  */
 
@@ -48,13 +47,8 @@ extern TX_THREAD                *_tx_thread_current_ptr;
    how other interrupts may be defined as well.  See code below for an 
    example.  */
 
-HANDLE                          _tx_win32_timer_handle;
-DWORD                           _tx_win32_timer_id;
-DWORD WINAPI                    _tx_win32_timer_interrupt(LPVOID p);
-
-/* Start a periodic windows timer that triggers the simulated
-   timer interrupt at 100 hz. */
-VOID                            _tx_win32_start_periodic_timer();
+UINT                            _tx_win32_timer_id;
+VOID CALLBACK                   _tx_win32_timer_interrupt(UINT wTimerID, UINT msg, DWORD dwUser, DWORD dw1, DWORD dw2);
 
 
 #ifdef TX_WIN32_DEBUG_ENABLE
@@ -145,9 +139,10 @@ void    _tx_win32_debug_entry_insert(char *action, char *file, unsigned long lin
 
 #endif
 
+
 /* Define the ThreadX timer interrupt handler.  */
 
-VOID            _tx_timer_interrupt(VOID);
+void            _tx_timer_interrupt(void);
 
 
 /* Define other external function references.  */
@@ -247,26 +242,6 @@ VOID   _tx_initialize_low_level(VOID)
 
     /* Initialize the global interrupt disabled flag.  */
     _tx_win32_global_int_disabled_flag =  TX_FALSE;
-    
-     /* Setup periodic timer interrupt.  */
-    _tx_win32_timer_handle =
-        CreateThread(NULL, 0, _tx_win32_timer_interrupt, (LPVOID) &_tx_win32_timer_handle,CREATE_SUSPENDED, &_tx_win32_timer_id);
-
-    /* Check for a good thread create.  */
-    if (!_tx_win32_timer_handle)
-    {
-
-        /* Error creating the timer interrupt.  */
-        printf("ThreadX Win32 error creating timer interrupt thread!\n");
-        while(1)
-        {
-        }
-    }
-
-    /* Otherwise, we have a good thread create.  Now set the priority to
-       a level lower than the system thread but higher than the application
-       threads.  */
-    SetThreadPriority(_tx_win32_timer_handle, THREAD_PRIORITY_BELOW_NORMAL);
 
     /* Done, return to caller.  */
 }
@@ -276,79 +251,39 @@ VOID   _tx_initialize_low_level(VOID)
    all interrupt threads.  Interrupt threads in addition to the timer may 
    be added to this routine as well.  */
 
-void    _tx_initialize_start_interrupts(void)
+void _tx_initialize_start_interrupts(void)
 {
-    /* Start a periodic windows timer that triggers the simulated
-       timer interrupt at 100 hz. */
-    _tx_win32_start_periodic_timer();
+    TIMECAPS tc;
+    UINT     wTimerRes;
 
-    /* Kick the timer thread off to generate the ThreadX periodic interrupt
-       source.  */
-    ResumeThread(_tx_win32_timer_handle);
+    /* Queries the timer device to determine its resolution.  */
+    if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR)
+    {
+        /* Error; application can't continue. */
+        printf("Query timer device error.");
+        while (1)
+        {
+        }
+    }
+
+    wTimerRes = min(max(tc.wPeriodMin, TX_TIMER_PERIODIC), tc.wPeriodMax);
+
+    /* Start a specified timer event. The timer runs in its own thread.
+       It calls the specified callback function when the event is activated.  */
+    _tx_win32_timer_id = timeSetEvent(TX_TIMER_PERIODIC, wTimerRes, _tx_win32_timer_interrupt, 0, TIME_PERIODIC);
 }
-
-
-/* Periodic timer event. This is triggered by the windows timer shown below.  */
-static HANDLE _tx_win32_periodic_timer = 0;
 
 /* Define the ThreadX system timer interrupt.  Other interrupts may be simulated
    in a similar way.  */
 
-DWORD WINAPI _tx_win32_timer_interrupt(LPVOID p)
+VOID CALLBACK _tx_win32_timer_interrupt(UINT wTimerID, UINT msg, DWORD dwUser, DWORD dw1, DWORD dw2)
 {
-    /* Wait for the periodic timer to be created.  */
-    while (_tx_win32_periodic_timer == 0)
-    {
-        Sleep(100);
-    }
+    /* Call ThreadX context save for interrupt preparation.  */
+    _tx_thread_context_save();
 
-    while(1)
-    {
-        /* Wait for the periodic timer event. This is triggered by the
-           windows timer shown below at 100 hz. */
-        if (WaitForSingleObject(_tx_win32_periodic_timer, INFINITE) != WAIT_OBJECT_0)
-        {
-            printf("_tx_win32_timer_interrupt WaitForSingleObject failed (%d)\n", GetLastError());
-        }
+    /* Call the ThreadX system timer interrupt processing.  */
+    _tx_timer_interrupt();
 
-        /* Call ThreadX context save for interrupt preparation.  */
-        _tx_thread_context_save();
-
-        /* Call the ThreadX system timer interrupt processing.  */
-        _tx_timer_interrupt();
-
-        /* Call ThreadX context restore for interrupt completion.  */
-        _tx_thread_context_restore();
-    } 
-}
-
-/* Start a periodic windows timer that triggers an event to wake up
-   the simulated timer interrupt thread at 100 hz. */
-
-VOID _tx_win32_start_periodic_timer()
-{
-    /* Period of 10 ms. */
-    LONG iPeriod = 10;
-
-    /* Initial start time of one period, 10 ms. */
-    LARGE_INTEGER liDueTime;
-    liDueTime.QuadPart = -iPeriod * 10 * 1000LL;
-
-    /* Set the windows timer resolution for this process for 1 ms. */
-    timeBeginPeriod(1);
-
-    /* Create an unnamed waitable timer. */
-    if (!(_tx_win32_periodic_timer = CreateWaitableTimer(NULL, FALSE, NULL)))
-    {
-        printf("_tx_win32_start_periodic_timer FAIL1 %d\n", GetLastError());
-        return;
-    }
-
-    /* Set the timer for periodic to start after the initial start time of
-       10 ms and to repeat at the period of 10 ms. */
-    if (!SetWaitableTimer(_tx_win32_periodic_timer, &liDueTime, iPeriod, NULL, NULL, 0))
-    {
-        printf("_tx_win32_start_periodic_timer FAIL2 %d\n", GetLastError());
-        return;
-    }
+    /* Call ThreadX context restore for interrupt completion.  */
+    _tx_thread_context_restore();
 }
