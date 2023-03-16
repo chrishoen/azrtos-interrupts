@@ -23,11 +23,47 @@
 //******************************************************************************
 //******************************************************************************
 
+inline void delay(int aLoop)
+{
+    volatile int gDummy = 0;
+    for (int i = 0; i < aLoop; i++) gDummy++;
+}
+
+//******************************************************************************
+//******************************************************************************
+//******************************************************************************
+
 HANDLE       _sample_win32_interrupt_handle;
 DWORD        _sample_win32_interrupt_id;
 DWORD WINAPI _sample_win32_interrupt_thread(LPVOID);
 
 DWORD WINAPI _sample_win32_interrupt_thread(LPVOID* ptr)
+{
+    printf("_sample_win32_interrupt_thread IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII\n");
+
+    LARGE_INTEGER tPerformanceCount;
+    QueryPerformanceCounter(&tPerformanceCount);
+    srand((unsigned)(tPerformanceCount.LowPart & 0xffffffff));
+
+    while (1)
+    {
+        /* Sleep for a random time, 250..350 ms. */
+        int tSleep = 250 + (rand() % 100);
+        Sleep(tSleep);
+        printf("_sample_win32_interrupt_thread JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ\n");
+
+        /* Call ThreadX context save for interrupt preparation.  */
+        _tx_thread_context_save();
+
+        /* Call application ISR here!  */
+        delay(50000);
+
+        /* Call ThreadX context restore for interrupt completion.  */
+        _tx_thread_context_restore();
+    }
+}
+
+DWORD WINAPI _sample_win32_interrupt_thread22(LPVOID* ptr)
 {
     printf("_sample_win32_interrupt_thread IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII\n");
 
